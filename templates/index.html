@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ ui_lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIP39 Mnemonic Dotmap Visualizer</title>
+    <title>{{ t('app_title') }}</title>
     <!-- Theme Switcher Inline Script (prevents flashing) -->
     <script>
         (function() {
@@ -104,34 +104,51 @@
         <!-- Theme Toggle Button Group in Top-Right Corner -->
         <div class="position-absolute top-0 end-0 mt-3 me-3 z-3">
             <div class="btn-group btn-group-sm" role="group" aria-label="Theme switcher">
-                <button type="button" class="btn btn-outline-secondary" id="theme-btn-light">Light</button>
-                <button type="button" class="btn btn-outline-secondary" id="theme-btn-dark">Dark</button>
+                <button type="button" class="btn btn-outline-secondary" id="theme-btn-light">{{ t('theme_light') }}</button>
+                <button type="button" class="btn btn-outline-secondary" id="theme-btn-dark">{{ t('theme_dark') }}</button>
             </div>
         </div>
 
         <!-- Header -->
         <div class="header-section text-center">
-            <h1 class="display-5 fw-bold">BIP39 Mnemonic Dotmap</h1>
-            <p class="lead mb-0">Transform 12 to 24 recovery words into safe bytearrays and interactive binary dot maps</p>
+            <h1 class="display-5 fw-bold">{{ t('header_title') }}</h1>
+            <p class="lead mb-0">{{ t('header_subtitle') }}</p>
         </div>
 
         <!-- Security Manual Trigger Buttons -->
         <div class="d-flex justify-content-center gap-3 mb-4">
             <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#beforeSecurityModal">
-                ⚠️ View Pre-Input Security Advice
+                {{ t('btn_pre_input_advice') }}
             </button>
             <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#afterSecurityModal">
-                🔒 View Post-Output Checklist Advice
+                {{ t('btn_post_output_advice') }}
             </button>
         </div>
 
         <!-- Form Card -->
         <div class="card p-4 mb-4">
-            <form method="POST" action="/">
+            <form method="POST" action="/" id="mainForm">
+                <!-- Keep UI Language parameter in the form -->
+                <input type="hidden" name="ui_lang" id="uiLangInput" value="{{ ui_lang }}">
+
+                <!-- UI Language Selection dropdown inside the form card -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-12 text-end">
+                        <div class="d-inline-flex align-items-center">
+                            <label for="uiLanguageSelect" class="form-label me-2 mb-0 fw-bold">{{ t('select_interface_language') }}:</label>
+                            <select id="uiLanguageSelect" class="form-select form-select-sm" style="width: auto;" onchange="changeInterfaceLanguage(this.value)">
+                                {% for lang in ui_languages %}
+                                <option value="{{ lang.code }}" {% if lang.code == ui_lang %}selected{% endif %}>{{ lang.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row g-3">
                     <!-- Language Selection -->
                     <div class="col-md-6">
-                        <label for="language" class="form-label fw-bold">Select Wordlist Language</label>
+                        <label for="language" class="form-label fw-bold">{{ t('select_wordlist_language') }}</label>
                         <select name="language" id="language" class="form-select form-select-lg">
                             {% for lang in languages %}
                             <option value="{{ lang.key }}" {% if lang.key == selected_language %}selected{% endif %}>
@@ -143,26 +160,26 @@
 
                     <!-- Advanced Encryption Options -->
                     <div class="col-md-6">
-                        <label for="encryption_method" class="form-label fw-bold">Additional Encryption Method</label>
+                        <label for="encryption_method" class="form-label fw-bold">{{ t('additional_encryption_method') }}</label>
                         <select name="encryption_method" id="encryption_method" class="form-select form-select-lg">
-                            <option value="none" {% if encryption_method == 'none' %}selected{% endif %}>None (Normal Dot Map)</option>
-                            <option value="xor" {% if encryption_method == 'xor' %}selected{% endif %}>XOR Masking (Vernam Cipher)</option>
-                            <option value="permutation" {% if encryption_method == 'permutation' %}selected{% endif %}>Bit Permutation (P-Boxes)</option>
+                            <option value="none" {% if encryption_method == 'none' %}selected{% endif %}>{{ t('encryption_none') }}</option>
+                            <option value="xor" {% if encryption_method == 'xor' %}selected{% endif %}>{{ t('encryption_xor') }}</option>
+                            <option value="permutation" {% if encryption_method == 'permutation' %}selected{% endif %}>{{ t('encryption_permutation') }}</option>
                         </select>
                     </div>
 
                     <!-- Word Input -->
                     <div class="col-12 mt-4">
-                        <label for="words" class="form-label fw-bold">Enter Mnemonic Words (12 to 24 words)</label>
-                        <textarea class="form-control" name="words" id="words" rows="5" placeholder="Enter your 12 to 24 words separated by spaces, commas, or newlines..." required>{{ words_input }}</textarea>
+                        <label for="words" class="form-label fw-bold">{{ t('enter_mnemonic_words') }}</label>
+                        <textarea class="form-control" name="words" id="words" rows="5" placeholder="{{ t('input_placeholder') }}" required>{{ words_input }}</textarea>
                         <div class="form-text text-danger">
-                            🔒 <strong>Privacy Check:</strong> Input sanitization is active. Safe bytearray processing limits inputs to 10,000 characters and strips null bytes automatically to prevent exploit vectors or core dumps.
+                            {{ t('privacy_check_text') | safe }}
                         </div>
                     </div>
 
                     <!-- Submit -->
                     <div class="col-12 mt-4 text-end">
-                        <button type="submit" class="btn btn-primary btn-lg px-5">Generate Dotmap</button>
+                        <button type="submit" class="btn btn-primary btn-lg px-5">{{ t('btn_generate_dotmap') }}</button>
                     </div>
                 </div>
             </form>
@@ -171,7 +188,7 @@
         <!-- Error/Warning Alerts -->
         {% if error_msg %}
         <div class="alert alert-warning border-0 shadow-sm mb-4" role="alert">
-            <h5 class="alert-heading fw-bold">Validation Status</h5>
+            <h5 class="alert-heading fw-bold">{{ t('validation_status') }}</h5>
             <p class="mb-0">{{ error_msg }}</p>
         </div>
         {% endif %}
@@ -179,16 +196,16 @@
         <!-- Decryption Key & Manual Decryption Guide Card -->
         {% if results and encryption_method != 'none' %}
         <div class="card p-4 mb-4 border-warning" style="border-width: 2px;">
-            <h3 class="border-bottom pb-2 mb-4 fw-bold text-warning">🔑 Manual Decryption Keys & Guide</h3>
+            <h3 class="border-bottom pb-2 mb-4 fw-bold text-warning">{{ t('manual_decryption_keys_guide') | safe }}</h3>
 
             {% if encryption_method == 'xor' %}
-            <p><strong>XOR Masking active:</strong> Each word's unencrypted dot map was XOR'ed with a unique, cryptographically secure 12-bit random key. To manually retrieve your original dot map, calculate the logical XOR of the Encrypted Dot Map and its corresponding key.</p>
+            <p>{{ t('xor_active_desc') | safe }}</p>
             <div class="bg-body-tertiary border shadow-sm rounded p-3 mb-3">
-                <h5 class="fw-bold">💡 How to Decrypt Manually:</h5>
-                <p class="mb-1">Compare the encrypted dots with the key dots column by column:</p>
+                <h5 class="fw-bold">{{ t('how_to_decrypt_manually') }}</h5>
+                <p class="mb-1">{{ t('how_to_decrypt_manually_desc') }}</p>
                 <ul class="mb-0">
-                    <li>If both are empty (○○) or both are filled (●●), the decrypted dot is **empty (○)** (0 ^ 0 = 0, 1 ^ 1 = 0).</li>
-                    <li>If they are different (○● or ●○), the decrypted dot is **filled (●)** (0 ^ 1 = 1, 1 ^ 0 = 1).</li>
+                    <li>{{ t('how_to_decrypt_xor_bullet1') }}</li>
+                    <li>{{ t('how_to_decrypt_xor_bullet2') }}</li>
                 </ul>
             </div>
 
@@ -196,9 +213,9 @@
                 <table class="table table-bordered table-striped align-middle dotmap-table">
                     <thead class="table-dark">
                         <tr>
-                            <th scope="col" style="width: 80px;">#</th>
-                            <th scope="col">Word</th>
-                            <th scope="col" class="text-center">Decryption Key (Vernam)</th>
+                            <th scope="col" style="width: 80px;">{{ t('table_header_num') }}</th>
+                            <th scope="col">{{ t('table_header_word') }}</th>
+                            <th scope="col" class="text-center">{{ t('table_header_decryption_key') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -223,22 +240,22 @@
             </div>
 
             {% elif encryption_method == 'permutation' %}
-            <p><strong>Bit Permutation active:</strong> All 12 columns of the dot map have been shuffled according to a cryptographically strong random permutation sequence. This prevents visual pattern recognition of your BIP39 indices.</p>
+            <p>{{ t('permutation_active_desc') | safe }}</p>
 
             <div class="bg-body-tertiary border shadow-sm rounded p-3 mb-3">
-                <h5 class="fw-bold">💡 How to Decrypt Manually:</h5>
-                <p class="mb-0">Use the following reference mapping card to re-order the columns. For each index, find the corresponding column number of the encrypted dot map and copy its state (○ or ●) back to the original index position.</p>
+                <h5 class="fw-bold">{{ t('how_to_decrypt_manually') }}</h5>
+                <p class="mb-0">{{ t('permutation_how_to_decrypt') }}</p>
             </div>
 
             <div class="row g-3 justify-content-center">
                 <div class="col-md-8">
                     <div class="card bg-dark text-white p-3">
-                        <h6 class="fw-bold text-center text-warning mb-3">COLUMN RE-ORDERING REFERENCE CARD</h6>
+                        <h6 class="fw-bold text-center text-warning mb-3">{{ t('column_reordering_reference_card') }}</h6>
                         <div class="table-responsive">
                             <table class="table table-dark table-bordered text-center align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th class="text-warning">Original Position</th>
+                                        <th class="text-warning">{{ t('original_position') }}</th>
                                         {% for m in decryption_mapping %}
                                         <th>{{ m.original_pos }}</th>
                                         {% endfor %}
@@ -246,7 +263,7 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="text-warning">Read From Encrypted Col</td>
+                                        <td class="text-warning">{{ t('read_from_encrypted_col') }}</td>
                                         {% for m in decryption_mapping %}
                                         <td class="fw-bold text-info fs-5">{{ m.encrypted_pos }}</td>
                                         {% endfor %}
@@ -266,9 +283,9 @@
         <div class="card p-4 mb-4">
             <h3 class="border-bottom pb-2 mb-4 fw-bold text-body">
                 {% if encryption_method == 'none' %}
-                    Visualization & Dot Map Table
+                    {{ t('visualization_dotmap_table') | safe }}
                 {% else %}
-                    🔐 Encrypted Visual Dot Map Table
+                    {{ t('encrypted_visualization_dotmap_table') | safe }}
                 {% endif %}
             </h3>
 
@@ -276,14 +293,14 @@
                 <table class="table table-bordered table-striped align-middle dotmap-table">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col" style="width: 80px;">#</th>
-                            <th scope="col">Original Word</th>
-                            <th scope="col">Wordlist Index (1-2048)</th>
+                            <th scope="col" style="width: 80px;">{{ t('table_header_num') }}</th>
+                            <th scope="col">{{ t('table_header_original_word') }}</th>
+                            <th scope="col">{{ t('table_header_wordlist_index') }}</th>
                             <th scope="col" class="text-center" style="letter-spacing: 2px;">
                                 {% if encryption_method == 'none' %}
-                                    12-Bit Dot Map Representation
+                                    {{ t('table_header_dotmap_representation') }}
                                 {% else %}
-                                    🔒 Encrypted 12-Bit Dot Map Representation
+                                    {{ t('table_header_encrypted_dotmap_representation') }}
                                 {% endif %}
                             </th>
                         </tr>
@@ -295,14 +312,14 @@
                             <td>
                                 <strong>{{ row.original }}</strong>
                                 {% if not row.match_found %}
-                                <span class="badge bg-danger ms-2">Unmatched</span>
+                                <span class="badge bg-danger ms-2">{{ t('badge_unmatched') }}</span>
                                 {% endif %}
                             </td>
                             <td>
                                 {% if row.match_found %}
                                     <span class="badge bg-success fs-6">{{ row.index }}</span>
                                 {% else %}
-                                    <span class="text-danger fw-bold">NOT FOUND</span>
+                                    <span class="text-danger fw-bold">{{ t('status_not_found') }}</span>
                                 {% endif %}
                             </td>
                             <td class="text-center fs-4 font-monospace">
@@ -323,7 +340,7 @@
                                         </div>
                                     {% endif %}
                                 {% else %}
-                                    <span class="text-danger fw-bold fs-6">N/A</span>
+                                    <span class="text-danger fw-bold fs-6">{{ t('status_na') }}</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -337,21 +354,21 @@
         {% if encryption_method != 'none' %}
         <div class="card p-4 mb-4 border-info">
             <div class="d-flex justify-content-between align-items-center">
-                <h4 class="fw-bold mb-0 text-info">🔍 Verify Normal (Unencrypted) Dot Map</h4>
+                <h4 class="fw-bold mb-0 text-info">{{ t('verify_normal_dotmap') }}</h4>
                 <button class="btn btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOriginalDotmap" aria-expanded="false" aria-controls="collapseOriginalDotmap">
-                    Toggle Original Dot Map
+                    {{ t('toggle_original_dotmap') }}
                 </button>
             </div>
 
             <div class="collapse mt-4" id="collapseOriginalDotmap">
-                <p class="text-muted">Use this table to double-check the raw, unencrypted dot maps of your recovery phrase for verification purposes before physical engraving.</p>
+                <p class="text-muted">{{ t('verify_normal_desc') }}</p>
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped align-middle dotmap-table">
                         <thead class="table-light">
                             <tr>
-                                <th scope="col" style="width: 80px;">#</th>
-                                <th scope="col">Original Word</th>
-                                <th scope="col" class="text-center" style="letter-spacing: 2px;">Normal 12-Bit Dot Map</th>
+                                <th scope="col" style="width: 80px;">{{ t('table_header_num') }}</th>
+                                <th scope="col">{{ t('table_header_original_word') }}</th>
+                                <th scope="col" class="text-center" style="letter-spacing: 2px;">{{ t('table_header_normal_dotmap') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -380,47 +397,47 @@
 
         <!-- Safe Bytearray Card -->
         <div class="card p-4 mb-4">
-            <h3 class="border-bottom pb-2 mb-4 fw-bold text-body">Safe Bytearray Transformation Output</h3>
+            <h3 class="border-bottom pb-2 mb-4 fw-bold text-body">{{ t('safe_bytearray_title') }}</h3>
 
             <!-- Raw Words Bytearray -->
             <div class="mb-4">
-                <h5 class="fw-bold text-secondary">Exact Words Input Bytearray (UTF-8 Encoded)</h5>
+                <h5 class="fw-bold text-secondary">{{ t('exact_words_bytearray_title') }}</h5>
                 <p class="text-muted small mb-2">
-                    This represents the raw string representation of the parsed words (joined by a single space) converted to a safe bytearray.
+                    {{ t('exact_words_bytearray_desc') }}
                 </p>
-                <div class="mb-2"><strong>Hex String:</strong></div>
+                <div class="mb-2"><strong>{{ t('hex_string_label') }}</strong></div>
                 <div class="bytearray-box mb-2">{{ raw_words_bytearray_hex if raw_words_bytearray_hex else 'Empty' }}</div>
-                <div><strong>Integer Decimal Array:</strong></div>
+                <div><strong>{{ t('integer_decimal_array_label') }}</strong></div>
                 <div class="bytearray-box">{{ raw_words_bytearray_list if raw_words_bytearray_list else 'Empty' }}</div>
             </div>
 
             <!-- Normal vs Encrypted Bytearrays -->
             <div class="row g-3">
                 <div class="col-md-6">
-                    <h5 class="fw-bold text-secondary">Original Word Indices Bytearray</h5>
-                    <p class="text-muted small mb-2">Matched BIP39 indices serialized to big-endian 2-byte values.</p>
-                    <div class="mb-2"><strong>Hex String:</strong></div>
+                    <h5 class="fw-bold text-secondary">{{ t('original_indices_bytearray_title') }}</h5>
+                    <p class="text-muted small mb-2">{{ t('original_indices_bytearray_desc') }}</p>
+                    <div class="mb-2"><strong>{{ t('hex_string_label') }}</strong></div>
                     <div class="bytearray-box mb-2">{{ indices_bytearray_hex if indices_bytearray_hex else 'Empty' }}</div>
-                    <div><strong>Integer Decimal Array:</strong></div>
+                    <div><strong>{{ t('integer_decimal_array_label') }}</strong></div>
                     <div class="bytearray-box">{{ indices_bytearray_list if indices_bytearray_list else 'Empty' }}</div>
                 </div>
 
                 <div class="col-md-6">
                     <h5 class="fw-bold text-secondary">
                         {% if encryption_method == 'none' %}
-                            Encrypted Word Indices Bytearray
+                            {{ t('encrypted_indices_bytearray_title') }}
                         {% else %}
-                            🔒 Encrypted Word Indices Bytearray
+                            {{ t('encrypted_indices_bytearray_title_encrypted') }}
                         {% endif %}
                     </h5>
                     {% if encryption_method == 'none' %}
-                        <p class="text-muted small mb-2">Activate an advanced encryption method to populate this output field.</p>
-                        <div class="text-muted small">Not Active</div>
+                        <p class="text-muted small mb-2">{{ t('encrypted_indices_bytearray_desc_inactive') }}</p>
+                        <div class="text-muted small">{{ t('status_not_active') }}</div>
                     {% else %}
-                        <p class="text-muted small mb-2">Encrypted matched indices serialized to big-endian 2-byte values.</p>
-                        <div class="mb-2"><strong>Hex String:</strong></div>
+                        <p class="text-muted small mb-2">{{ t('encrypted_indices_bytearray_desc_active') }}</p>
+                        <div class="mb-2"><strong>{{ t('hex_string_label') }}</strong></div>
                         <div class="bytearray-box mb-2">{{ encrypted_indices_bytearray_hex if encrypted_indices_bytearray_hex else 'Empty' }}</div>
-                        <div><strong>Integer Decimal Array:</strong></div>
+                        <div><strong>{{ t('integer_decimal_array_label') }}</strong></div>
                         <div class="bytearray-box">{{ encrypted_indices_bytearray_list if encrypted_indices_bytearray_list else 'Empty' }}</div>
                     {% endif %}
                 </div>
@@ -434,34 +451,34 @@
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header bg-warning text-dark">
-                        <h5 class="modal-title fw-bold" id="beforeSecurityModalLabel">⚠️ Critical Security Advice Before Introducing Words</h5>
+                        <h5 class="modal-title fw-bold" id="beforeSecurityModalLabel">{{ t('modal_before_title') }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body bg-body-secondary">
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <div class="p-3 bg-body rounded shadow-sm h-100">
-                                    <h6 class="fw-bold text-body">1. Run Completely Offline</h6>
-                                    <p class="small text-muted mb-0">Disconnect your computer from the internet (air-gap) or run on a secure offline Live OS like Tails or Ubuntu Live.</p>
+                                    <h6 class="fw-bold text-body">{{ t('modal_before_bullet1_title') }}</h6>
+                                    <p class="small text-muted mb-0">{{ t('modal_before_bullet1_desc') }}</p>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="p-3 bg-body rounded shadow-sm h-100">
-                                    <h6 class="fw-bold text-body">2. Disable Browser Extensions</h6>
-                                    <p class="small text-muted mb-0">Open this app in a <strong>Private / Incognito Window</strong>. Third-party extensions can scrape page inputs and leak secrets.</p>
+                                    <h6 class="fw-bold text-body">{{ t('modal_before_bullet2_title') }}</h6>
+                                    <p class="small text-muted mb-0">{{ t('modal_before_bullet2_desc') | safe }}</p>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="p-3 bg-body rounded shadow-sm h-100">
-                                    <h6 class="fw-bold text-body">3. Type, Do Not Paste</h6>
-                                    <p class="small text-muted mb-0">Type your recovery words manually instead of copy-pasting to prevent clipboard histories or background tools from caching your phrase.</p>
+                                    <h6 class="fw-bold text-body">{{ t('modal_before_bullet3_title') }}</h6>
+                                    <p class="small text-muted mb-0">{{ t('modal_before_bullet3_desc') }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <p class="small text-muted mb-0">Please follow these advices and use it at your own risk.</p>
-                        <button type="button" class="btn btn-warning text-dark fw-bold" data-bs-dismiss="modal">I Understand</button>
+                        <p class="small text-muted mb-0">{{ t('modal_before_footer') }}</p>
+                        <button type="button" class="btn btn-warning text-dark fw-bold" data-bs-dismiss="modal">{{ t('btn_i_understand') }}</button>
                     </div>
                 </div>
             </div>
@@ -472,39 +489,39 @@
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header bg-info text-white">
-                        <h5 class="modal-title fw-bold" id="afterSecurityModalLabel">🔒 Critical Security Actions After Generating Output</h5>
+                        <h5 class="modal-title fw-bold" id="afterSecurityModalLabel">{{ t('modal_after_title') }}</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body bg-body-secondary">
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <div class="p-3 bg-body rounded shadow-sm h-100">
-                                    <h6 class="fw-bold text-body">1. Clear Clipboard</h6>
-                                    <p class="small text-muted mb-0">Copy some random dummy text (e.g., "abc") to completely wipe your clipboard history buffer.</p>
+                                    <h6 class="fw-bold text-body">{{ t('modal_after_bullet1_title') }}</h6>
+                                    <p class="small text-muted mb-0">{{ t('modal_after_bullet1_desc') }}</p>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-3 bg-body rounded shadow-sm h-100">
-                                    <h6 class="fw-bold text-body">2. Close Windows</h6>
-                                    <p class="small text-muted mb-0">Completely close all browser tabs and clear the temporary browser memory cache.</p>
+                                    <h6 class="fw-bold text-body">{{ t('modal_after_bullet2_title') }}</h6>
+                                    <p class="small text-muted mb-0">{{ t('modal_after_bullet2_desc') }}</p>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-3 bg-body rounded shadow-sm h-100">
-                                    <h6 class="fw-bold text-body">3. Kill Server</h6>
-                                    <p class="small text-muted mb-0">Terminate the local Flask backend server process running on your machine immediately.</p>
+                                    <h6 class="fw-bold text-body">{{ t('modal_after_bullet3_title') }}</h6>
+                                    <p class="small text-muted mb-0">{{ t('modal_after_bullet3_desc') }}</p>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-3 bg-body rounded shadow-sm h-100">
-                                    <h6 class="fw-bold text-body">4. Restart Device</h6>
-                                    <p class="small text-muted mb-0">Reboot/restart your machine to guarantee that system RAM is completely flushed and cleared.</p>
+                                    <h6 class="fw-bold text-body">{{ t('modal_after_bullet4_title') }}</h6>
+                                    <p class="small text-muted mb-0">{{ t('modal_after_bullet4_desc') }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-info text-white fw-bold" data-bs-dismiss="modal">Got It</button>
+                        <button type="button" class="btn btn-info text-white fw-bold" data-bs-dismiss="modal">{{ t('btn_got_it') }}</button>
                     </div>
                 </div>
             </div>
@@ -512,14 +529,31 @@
 
         <!-- Educational Footer -->
         <footer class="mt-5 text-center text-muted py-4 border-top">
-            <p class="mb-1"><strong>BIP39 Mnemonic Dotmap Visualizer</strong></p>
-            <p class="small mb-0">Designed as a secure offline system to plot recovery seeds visually on durable mediums like metal plates. By Racga12</p>
+            <p class="mb-1"><strong>{{ t('app_title') }}</strong></p>
+            <p class="small mb-0">{{ t('footer_text') }}</p>
         </footer>
     </div>
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // JS Function to change dynamic interface language without requiring a form submission with empty text errors
+        function changeInterfaceLanguage(langCode) {
+            // Store interface language choice in cookie
+            document.cookie = "ui_lang=" + langCode + "; path=/; max-age=31536000";
+
+            // If we have some words entered already, we can submit the form to preserve them.
+            // If the words input is empty, we just refresh the GET page or submit without validation.
+            const wordsInput = document.getElementById('words');
+            if (wordsInput && wordsInput.value.trim() !== '') {
+                document.getElementById('uiLangInput').value = langCode;
+                document.getElementById('mainForm').submit();
+            } else {
+                // Perform a simple GET reload with ui_lang parameter or redirect
+                window.location.href = "/?ui_lang=" + langCode;
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", function() {
             // Theme Switcher Logic
             const lightBtn = document.getElementById('theme-btn-light');
