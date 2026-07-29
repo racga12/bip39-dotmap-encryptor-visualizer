@@ -206,7 +206,7 @@ class TestBIP39DotmapApp(unittest.TestCase):
 
     def test_ui_language_fallback(self):
         # Test fallback to English when dynamic translation missing or wrong language requested
-        response = self.client.get('/?ui_lang=fr')  # french translation doesn't exist
+        response = self.client.get('/?ui_lang=xyz')  # xyz translation doesn't exist
         self.assertEqual(response.status_code, 200)
         data_str = response.data.decode('utf-8')
         # Check English default is rendered
