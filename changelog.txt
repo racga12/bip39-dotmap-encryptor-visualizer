@@ -1,8 +1,16 @@
 BIP39 Mnemonic Dotmap Visualizer Changelog
 ===========================================
 
-v1.1.0 - Standalone Offline Executable Support (Current Release)
---------------------------------------------------------------
+v1.2.0 - Multilingual Interface Support (Current Release)
+---------------------------------------------------------
+* **Dynamic Frontend Interface Translations:** Extracted and abstracted all user-facing interface, warning, checklist, educational, and validation strings into modular translation files (`en.json` and `es.json` under `translations/` directory).
+* **Zero-Configuration Drop-In Languages:** Implemented an automated scanner in the Python/Flask backend that automatically loads any `*.json` file inside `translations/` on startup, allowing new interface languages to be added simply by dropping a new translation file into the directory.
+* **Persistent Preferences:** Persisted the user's interface language preferences inside cookies (`ui_lang`), allowing the choice to survive browser tabs closing.
+* **Smooth UI Switching:** Enhanced the UI language select interaction with inline JavaScript logic to switch languages without triggering empty-input validation alerts.
+* **Complete PyInstaller Compatibility:** Updated standalone compilation configs to bundles the `translations/` assets cleanly inside the single executable.
+
+v1.1.0 - Standalone Offline Executable Support
+----------------------------------------------
 * **Debian-Based OS Standalone Executable Support:** Included support for compiling the entire application (Flask backend, HTML templates, and BIP39 localized wordlists) into a single standalone, self-contained static executable for Debian-based operating systems (Tails, Debian, Ubuntu).
 * **Automatic Web Browser Launching:** Added a secure background daemon thread that automatically opens the user's default web browser to the server (http://127.0.0.1:5000) on startup for a seamless offline plug-and-play experience.
 * **Hardened Local Socket Security:** When executed in a compiled/frozen state, the web server restricts socket binding to `127.0.0.1` (localhost) rather than `0.0.0.0` (all interfaces) to prevent other devices on the local network from querying the sensitive offline seed visualization, and disables the debugging server.

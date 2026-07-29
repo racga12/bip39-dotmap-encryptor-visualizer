@@ -170,5 +170,47 @@ class TestBIP39DotmapApp(unittest.TestCase):
         self.assertEqual(decryption_mapping[11]['original_pos'], 12)
         self.assertEqual(decryption_mapping[11]['encrypted_pos'], 1)
 
+    def test_translation_files_loading(self):
+        # Ensure that English and Spanish dynamic files are parsed
+        from app import TRANSLATIONS, UI_LANGUAGES
+        self.assertIn('en', TRANSLATIONS)
+        self.assertIn('es', TRANSLATIONS)
+        self.assertEqual(TRANSLATIONS['en']['interface_language_name'], 'English')
+        self.assertEqual(TRANSLATIONS['es']['interface_language_name'], 'Español')
+
+        # Ensure UI_LANGUAGES is populated
+        codes = [lang['code'] for lang in UI_LANGUAGES]
+        self.assertIn('en', codes)
+        self.assertIn('es', codes)
+
+    def test_ui_language_get_param(self):
+        # Testing UI language selection via query parameter
+        response = self.client.get('/?ui_lang=es')
+        self.assertEqual(response.status_code, 200)
+        data_str = response.data.decode('utf-8')
+        # Check Spanish translations
+        self.assertIn("Visualizador de Dotmap", data_str)
+        # Check that Cookie is set
+        headers = dict(response.headers)
+        self.assertIn('Set-Cookie', headers)
+        self.assertIn('ui_lang=es', headers['Set-Cookie'])
+
+    def test_ui_language_cookie_persistence(self):
+        # Send request with cookie set to Spanish
+        self.client.set_cookie('ui_lang', 'es')
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        data_str = response.data.decode('utf-8')
+        # Check Spanish translation is rendered
+        self.assertIn("Visualizador de Dotmap", data_str)
+
+    def test_ui_language_fallback(self):
+        # Test fallback to English when dynamic translation missing or wrong language requested
+        response = self.client.get('/?ui_lang=xyz')  # xyz translation doesn't exist
+        self.assertEqual(response.status_code, 200)
+        data_str = response.data.decode('utf-8')
+        # Check English default is rendered
+        self.assertIn("BIP39 Mnemonic Dotmap Visualizer", data_str)
+
 if __name__ == '__main__':
     unittest.main()

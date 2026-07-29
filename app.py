@@ -2,7 +2,8 @@ import os
 import re
 import sys
 import threading
-from flask import Flask, render_template, request, jsonify
+import json
+from flask import Flask, render_template, request, jsonify, make_response
 
 # Identify if the app is packaged/frozen with PyInstaller
 if getattr(sys, 'frozen', False):
@@ -13,6 +14,34 @@ if getattr(sys, 'frozen', False):
 else:
     base_dir = os.path.dirname(os.path.abspath(__file__))
     app = Flask(__name__)
+
+# Translations Configuration
+TRANSLATIONS_DIR = os.path.join(base_dir, 'translations')
+TRANSLATIONS = {}
+UI_LANGUAGES = []
+
+def load_translations():
+    global TRANSLATIONS, UI_LANGUAGES
+    TRANSLATIONS = {}
+    UI_LANGUAGES = []
+    if not os.path.exists(TRANSLATIONS_DIR):
+        print(f"Warning: translations directory not found at {TRANSLATIONS_DIR}")
+        return
+    for filename in sorted(os.listdir(TRANSLATIONS_DIR)):
+        if filename.endswith('.json'):
+            lang_code = filename[:-5]  # remove '.json'
+            filepath = os.path.join(TRANSLATIONS_DIR, filename)
+            try:
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    translations_data = json.load(f)
+                TRANSLATIONS[lang_code] = translations_data
+                lang_name = translations_data.get('interface_language_name', lang_code.upper())
+                UI_LANGUAGES.append({'code': lang_code, 'name': lang_name})
+                print(f"Loaded interface translation: {lang_name} ({lang_code})")
+            except Exception as e:
+                print(f"Error loading translation {filename}: {e}")
+
+load_translations()
 
 # Constants
 # Support both 'wordlists' and 'wordslists' directories to be robust
@@ -77,6 +106,24 @@ def safe_to_bytearray(input_str: str) -> bytearray:
 def index():
     import secrets
 
+    # Read selected UI language from cookie, query param or form, defaulting to 'en'
+    ui_lang = request.values.get('ui_lang')
+    if not ui_lang:
+        ui_lang = request.cookies.get('ui_lang', 'en')
+    if ui_lang not in TRANSLATIONS:
+        ui_lang = 'en'
+
+    # Prepare translation function
+    def t(key, **kwargs):
+        lang_dict = TRANSLATIONS.get(ui_lang, TRANSLATIONS.get('en', {}))
+        val = lang_dict.get(key, TRANSLATIONS.get('en', {}).get(key, key))
+        if kwargs:
+            try:
+                return val.format(**kwargs)
+            except Exception:
+                return val
+        return val
+
     selected_language = request.form.get('language', 'english')
     words_input = request.form.get('words', '')
     encryption_method = request.form.get('encryption_method', 'none')
@@ -133,14 +180,18 @@ def index():
 
     # Handle the matching and validation if input is provided
     if request.method == 'POST':
+        # If user changed ui_lang via submit button but didn't actually enter words yet,
+        # we don't want to throw error if words was completely empty or not provided.
+        # But if they posted via submit, words field has 'required' in HTML.
+        # Let's check if they provided any input or if it is empty.
         word_count = len(raw_words)
 
         if word_count == 0:
-            error_msg = "Please enter some words."
+            error_msg = t('error_enter_words')
         elif not (12 <= word_count <= 24):
-            error_msg = f"You introduced {word_count} words. Please enter from 12 to 24 words (inclusive)."
+            error_msg = t('error_word_count', word_count=word_count)
         elif not wordlist:
-            error_msg = f"Wordlist for language '{selected_language}' is not available."
+            error_msg = t('error_wordlist_not_available', selected_language=selected_language.replace('_', ' ').title())
         else:
             # Match each word with the selected wordlist
             for i, word in enumerate(raw_words, 1):
@@ -205,7 +256,7 @@ def index():
                 })
 
             if unmatched_words:
-                error_msg = f"Warning: The following word(s) did not match the '{selected_language.replace('_', ' ').title()}' wordlist: {', '.join(unmatched_words)}."
+                error_msg = t('error_unmatched_words', selected_language=selected_language.replace('_', ' ').title(), unmatched_words=', '.join(unmatched_words))
 
     # 2. Bytearray of the indices of the matched words (2 bytes per index, big-endian)
     indices_bytearray = bytearray()
@@ -231,7 +282,7 @@ def index():
     encrypted_indices_bytearray_hex = encrypted_indices_bytearray.hex()
     encrypted_indices_bytearray_list = list(encrypted_indices_bytearray)
 
-    return render_template(
+    resp = make_response(render_template(
         'index.html',
         languages=LANGUAGES,
         selected_language=selected_language,
@@ -249,8 +300,13 @@ def index():
         encrypted_indices_bytearray_hex=encrypted_indices_bytearray_hex,
         encrypted_indices_bytearray_list=encrypted_indices_bytearray_list,
         word_indices_list=[(idx if idx is not None else "??") for idx in word_indices_list],
-        encrypted_word_indices_list=[(idx if idx is not None else "??") for idx in encrypted_word_indices_list]
-    )
+        encrypted_word_indices_list=[(idx if idx is not None else "??") for idx in encrypted_word_indices_list],
+        ui_languages=UI_LANGUAGES,
+        ui_lang=ui_lang,
+        t=t
+    ))
+    resp.set_cookie('ui_lang', ui_lang)
+    return resp
 
 if __name__ == '__main__':
     # Automatically open default web browser when run directly

@@ -6,9 +6,9 @@ A secure, educational utility to convert cryptocurrency BIP39 mnemonic seed phra
 
 #### 📋 Work In Progress/TO-DO:
 * [x] Make user friendly version and guide to execute the app in a offline Linux Live session.
-* [ ] Multi Language support
+* [x] Multi Language support (both BIP39 wordlists and dynamic frontend interface translations)
 * [ ] User friendly guide to setting up a live Linux OS on a USB drive to run the application.
-      
+
 ---
 ## Table of Contents
 1. [Core Methodology](#-core-methodology)
@@ -16,7 +16,8 @@ A secure, educational utility to convert cryptocurrency BIP39 mnemonic seed phra
     - [Option A: Standalone Binary (Recommended for Tails/Debian Live OS)](#option-a-standalone-binary-recommended-for-tailsdebian-live-os)
     - [Option B: Local Development (Python 3.12+)](#option-b-local-development-python-312)
 3. [Trust-Minimized Build (Self-Compilation)](#%EF%B8%8F-trust-minimized-build-self-compilation)
-4. [Documentation & Technical Wiki](#-documentation--technical-wiki)
+4. [Multilingual Interface Support](#-multilingual-interface-support)
+5. [Documentation & Technical Wiki](#-documentation--technical-wiki)
 
 ---
 
@@ -63,8 +64,19 @@ No Python or dependencies required.
 To audit the application code and generate the frozen Linux binary yourself:
 ```bash
 pip install Flask pyinstaller
-pyinstaller --onefile --add-data "templates:templates" --add-data "wordslists:wordslists" --name "bip39-dotmap-visualizer" app.py
+pyinstaller --onefile --add-data "templates:templates" --add-data "wordslists:wordslists" --add-data "translations:translations" --name "bip39-dotmap-visualizer" app.py
 ```
+---
+
+## 🌐 Multilingual Interface Support
+This application supports dynamic interface translations. Interface translations are loaded as JSON files directly from the `translations/` directory.
+
+To add support for a new interface language:
+1. Create a JSON translation file in the `translations/` directory named with the language's code (e.g., `fr.json` for French).
+2. Follow the key-value translation structure of existing translation files, such as `translations/en.json`.
+3. Set the `"interface_language_name"` key to your language's name (e.g., `"Français"`).
+4. Restart the application. The language will be automatically loaded and selectable from the "Interface Language" dropdown menu.
+
 ---
 
 ## 📚 Documentation & Technical Wiki
